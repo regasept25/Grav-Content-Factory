@@ -228,7 +228,7 @@ export default function Dashboard() {
                         {run.content_ideas.map((idea) => (
                           <div key={idea.id} className="space-y-1.5">
                             <h4 className="font-medium text-sm text-[#fafafa]">{idea.title}</h4>
-                            <p className="text-xs text-[#b4b4b4] leading-relaxed"><strong>Hook:</strong> "{idea.hook}"</p>
+                            <p className="text-xs text-[#b4b4b4] leading-relaxed"><strong>Hook:</strong> &quot;{idea.hook}&quot;</p>
                             <p className="text-xs text-[#898989] leading-relaxed line-clamp-2">{idea.body}</p>
                           </div>
                         ))}

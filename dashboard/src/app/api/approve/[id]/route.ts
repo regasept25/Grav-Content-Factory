@@ -1,12 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, context: any) {
   try {
-    const runId = params.id;
+    const runId = context.params.id;
     const { error } = await supabase
       .from('workflow_runs')
       .update({ status: 'running', current_step: 'narrative' })
