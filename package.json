@@ -1,0 +1,26 @@
+{
+  "name": "ai-content-factory",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.112.2",
+    "dotenv": "^17.4.2",
+    "googleapis": "^174.0.1",
+    "node-telegram-bot-api": "^1.2.0",
+    "playwright": "^1.62.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/node-telegram-bot-api": "^0.64.15",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
+  }
+}
