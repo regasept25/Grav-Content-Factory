@@ -19,7 +19,8 @@ import {
   Cpu,
   Globe,
   Key,
-  HelpCircle
+  HelpCircle,
+  Loader2
 } from 'lucide-react';
 
 interface WorkflowRun {
@@ -73,6 +74,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [selectedNiche, setSelectedNiche] = useState<Niche | null>(null);
+
+  // Loading States for Buttons (Submit/Actions)
+  const [isSubmittingNiche, setIsSubmittingNiche] = useState(false);
+  const [isTriggeringRun, setIsTriggeringRun] = useState(false);
+  const [approvingRunId, setApprovingRunId] = useState<string | null>(null);
+  const [deletingNicheId, setDeletingNicheId] = useState<string | null>(null);
 
   // Form states for Niche & Agent Integration
   const [newNiche, setNewNiche] = useState<Niche>({
@@ -130,6 +137,7 @@ export default function Home() {
     const topic = prompt('Masukkan Topik atau Ide Konten Utama:');
     if (!topic) return;
 
+    setIsTriggeringRun(true);
     try {
       const res = await fetch('/api/trigger', {
         method: 'POST',
@@ -137,26 +145,32 @@ export default function Home() {
         body: JSON.stringify({ topic })
       });
       if (res.ok) {
-        fetchData();
+        await fetchData();
       }
     } catch (e) {
       alert('Gagal memicu content flow');
+    } finally {
+      setIsTriggeringRun(false);
     }
   };
 
   const handleApprove = async (runId: string) => {
+    setApprovingRunId(runId);
     try {
       const res = await fetch(`/api/approve/${runId}`, { method: 'POST' });
       if (res.ok) {
-        fetchData();
+        await fetchData();
       }
     } catch (e) {
       alert('Gagal menyetujui ide');
+    } finally {
+      setApprovingRunId(null);
     }
   };
 
   const handleSaveNiche = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmittingNiche(true);
     try {
       const isEdit = Boolean(newNiche.id);
       const url = isEdit ? `/api/niches/${newNiche.id}` : '/api/niches';
@@ -195,28 +209,33 @@ export default function Home() {
           caption_temp: 0.7
         });
         setSelectedNiche(null);
-        fetchData();
+        await fetchData();
       } else {
         const err = await res.json();
         alert('Gagal menyimpan Niche: ' + err.error);
       }
     } catch (e) {
       alert('Error saving niche');
+    } finally {
+      setIsSubmittingNiche(false);
     }
   };
 
   const handleDeleteNiche = async (id?: string) => {
     if (!id || !confirm('Hapus Niche Profile ini beserta semua konfigurasinya?')) return;
+    setDeletingNicheId(id);
     try {
       const res = await fetch(`/api/niches/${id}`, { method: 'DELETE' });
       if (res.ok) {
         if (newNiche.id === id) {
           setSelectedNiche(null);
         }
-        fetchData();
+        await fetchData();
       }
     } catch (e) {
       alert('Gagal menghapus niche');
+    } finally {
+      setDeletingNicheId(null);
     }
   };
 
@@ -236,7 +255,10 @@ export default function Home() {
             </div>
             <div>
               <h1 className="font-bold text-lg tracking-wide text-white">Grav Content CRM</h1>
-              <p className="text-[10px] text-emerald-400 font-mono">SUPERVISOR CONNECTED</p>
+              <p className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                SUPERVISOR CONNECTED
+              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -266,10 +288,15 @@ export default function Home() {
               </div>
               <button 
                 onClick={triggerNewRun}
-                className="bg-emerald-500 hover:bg-emerald-600 text-black px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2"
+                disabled={isTriggeringRun}
+                className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 text-black px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2"
               >
-                <Play size={14} fill="black" />
-                Picu Content Flow Baru
+                {isTriggeringRun ? (
+                  <Loader2 className="animate-spin" size={14} />
+                ) : (
+                  <Play size={14} fill="black" />
+                )}
+                {isTriggeringRun ? 'Memproses...' : 'Picu Content Flow Baru'}
               </button>
             </div>
 
@@ -321,9 +348,13 @@ export default function Home() {
                         {run.status === 'paused_for_approval' && (
                           <button
                             onClick={() => handleApprove(run.id)}
-                            className="bg-amber-500 hover:bg-amber-600 text-black px-3 py-1.5 rounded-lg text-xs font-bold transition"
+                            disabled={approvingRunId === run.id}
+                            className="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500/50 text-black px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1"
                           >
-                            Approve Ide
+                            {approvingRunId === run.id ? (
+                              <Loader2 className="animate-spin" size={12} />
+                            ) : null}
+                            {approvingRunId === run.id ? 'Memproses...' : 'Approve Ide'}
                           </button>
                         )}
                       </div>
@@ -695,6 +726,7 @@ export default function Home() {
                   {newNiche.id && (
                     <button
                       type="button"
+                      disabled={isSubmittingNiche}
                       onClick={() => {
                         setNewNiche({
                           name: '',
@@ -723,17 +755,22 @@ export default function Home() {
                         });
                         setSelectedNiche(null);
                       }}
-                      className="flex-1 bg-[#27272a] hover:bg-[#3f3f46] text-white py-2.5 rounded-lg text-xs font-semibold"
+                      className="flex-1 bg-[#27272a] hover:bg-[#3f3f46] text-white py-2.5 rounded-lg text-xs font-semibold transition"
                     >
                       Batal
                     </button>
                   )}
                   <button
                     type="submit"
-                    className="flex-[2] bg-emerald-500 hover:bg-emerald-600 text-black py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                    disabled={isSubmittingNiche}
+                    className="flex-[2] bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 text-black py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
                   >
-                    <Plus size={14} />
-                    {newNiche.id ? 'Update Niche Profile' : 'Simpan Niche Profile'}
+                    {isSubmittingNiche ? (
+                      <Loader2 className="animate-spin" size={14} />
+                    ) : (
+                      <Save size={14} />
+                    )}
+                    {isSubmittingNiche ? 'Menyimpan...' : newNiche.id ? 'Update Niche Profile' : 'Simpan Niche Profile'}
                   </button>
                 </div>
               </form>
@@ -774,15 +811,21 @@ export default function Home() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => startEditNiche(niche)}
+                              disabled={deletingNicheId === niche.id || isSubmittingNiche}
                               className="text-xs bg-[#27272a] hover:bg-[#3f3f46] px-3 py-1.5 rounded-md text-white font-medium transition"
                             >
                               Edit / Buka Detail
                             </button>
                             <button
                               onClick={() => handleDeleteNiche(niche.id)}
-                              className="text-[#a1a1aa] hover:text-red-400 p-1.5 transition"
+                              disabled={deletingNicheId === niche.id}
+                              className="text-[#a1a1aa] hover:text-red-400 p-1.5 transition disabled:opacity-50"
                             >
-                              <Trash2 size={16} />
+                              {deletingNicheId === niche.id ? (
+                                <Loader2 className="animate-spin" size={16} />
+                              ) : (
+                                <Trash2 size={16} />
+                              )}
                             </button>
                           </div>
                         </div>
