@@ -7,9 +7,9 @@ class ImagePromptAgent {
     constructor() {
         this.gemini = new gemini_1.GeminiService();
     }
-    async run(scriptText, visualNotes, ratio = '9:16') {
+    async run(scriptText, visualNotes, ratio = '9:16', minScenes = 5, maxScenes = 20) {
         const prompt = `
-    Kamu adalah Image Prompter Agent. Tugasmu adalah menganalisis naskah video dan catatan visual di bawah ini, lalu membaginya menjadi beberapa scene berurutan. Untuk tiap scene, buat prompt gambar yang mendetail untuk di-generate oleh AI Generator (Google Labs Flow / Imagen).
+    Kamu adalah Image Prompter Agent. Tugasmu adalah menganalisis naskah video dan catatan visual di bawah ini, lalu membaginya menjadi scene-scene berurutan secara logis berdasarkan alur narasi. Untuk setiap scene, buat prompt gambar yang mendetail untuk di-generate oleh AI Generator (Google Labs Flow / Imagen).
     
     Naskah: "${scriptText}"
     Catatan Visual: "${visualNotes}"
@@ -22,7 +22,8 @@ class ImagePromptAgent {
     - "aspectRatio": Rasio gambar (default: "${ratio}").
 
     Ketentuan:
-    - Batasi jumlah scene berkisar antara 3 sampai 6 scene agar tidak terlalu banyak memakan kuota generate gambar.
+    - Analisis kalimat per kalimat dari naskah. Jangan menggabungkan terlalu banyak bagian naskah ke dalam satu gambar saja jika visualnya berubah.
+    - Jumlah scene harus berkisar antara minimal ${minScenes} sampai maksimal ${maxScenes} scene, disesuaikan secara proporsional dengan panjang naskah narasi.
     - Jawab HANYA dengan JSON valid, tanpa markdown \`\`\`json atau teks tambahan apapun.
     `;
         return this.gemini.generateJson(prompt, false);

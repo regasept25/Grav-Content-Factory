@@ -42,8 +42,8 @@ exports.aiConfig = {
     provider: process.env.AI_PROVIDER || 'google',
     google: {
         apiKey: process.env.GOOGLE_AI_API_KEY || '',
-        model: 'gemini-1.5-flash', // Model standar hemat token
-        highReasoningModel: 'gemini-1.5-pro', // Untuk narrative/ideation kompleks
+        model: 'gemini-2.0-flash', // Model standar hemat token
+        highReasoningModel: 'gemini-2.0-flash', // Untuk narrative/ideation kompleks
     },
     openai: {
         apiKey: process.env.OPENAI_API_KEY || '',

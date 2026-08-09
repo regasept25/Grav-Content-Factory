@@ -52,7 +52,13 @@ class TelegramSupervisorAgent {
             console.log(`[Telegram Mock Report]: ${message}`);
             return;
         }
-        await this.bot.sendMessage(this.chatId, message, { parse_mode: 'Markdown' });
+        try {
+            await this.bot.sendMessage(this.chatId, message, { parse_mode: 'Markdown' });
+        }
+        catch (err) {
+            // Fallback plain text jika parsing markdown Telegram bermasalah
+            await this.bot.sendMessage(this.chatId, message);
+        }
     }
     async requestIdeaSelection(workflowId, ideas) {
         if (!this.bot) {
